@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useState } from "react";
 import { createBookmarks } from "@/lib/api/bookmarks";
 import type { BookmarkCreate } from "@/lib/api/types";
 import { ApiError } from "@/lib/api/client";
@@ -9,89 +9,96 @@ export default function BookmarkSaveForm() {
   const [url, setUrl] = useState("");
   const [title, setTitle] = useState("");
   const [tag, setTag] = useState("");
-  const [status, setStatus] = useState<null | string>(null);
-  const [error, setError] = useState<null | string>(null);
-  const [submitting, setSubmitting] = useState(false);
 
-  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setStatus(null);
+    setLoading(true);
+    setSuccess(null);
     setError(null);
-    setSubmitting(true);
+    const bookmark: BookmarkCreate = {
+      url: url.trim(),
+      title: title.trim(),
+      tag: tag.trim() === "" ? undefined : tag.trim(),
+    };
     try {
-      const bookmark: BookmarkCreate = { url, title, tag };
       await createBookmarks(bookmark);
-      setStatus("Bookmark saved!");
+      setSuccess("Bookmark saved successfully!");
       setUrl("");
       setTitle("");
       setTag("");
-    } catch (e: any) {
-      if (e instanceof ApiError) {
-        setError(e.message || "Error saving bookmark.");
+    } catch (err: any) {
+      if (err instanceof ApiError) {
+        setError(err.message || "Failed to save bookmark.");
       } else {
-        setError("Unknown error occurred.");
+        setError("Failed to save bookmark.");
       }
     } finally {
-      setSubmitting(false);
+      setLoading(false);
     }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-md space-y-4 bg-white p-6 rounded-md shadow border">
+    <form className="space-y-5" onSubmit={handleSubmit} noValidate aria-label="Save bookmark form">
       <div>
-        <label htmlFor="url" className="block font-medium mb-1">
-          URL
-        </label>
+        <label htmlFor="url" className="block text-sm font-medium text-gray-700">URL<span className="text-red-500">*</span></label>
         <input
           id="url"
           name="url"
           type="url"
-          required
-          className="w-full border rounded p-2 focus:outline-none focus:ring"
           value={url}
           onChange={e => setUrl(e.target.value)}
+          required
+          className="block w-full mt-1 rounded border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-100"
           placeholder="https://example.com"
+          autoComplete="off"
         />
       </div>
+
       <div>
-        <label htmlFor="title" className="block font-medium mb-1">
-          Title
-        </label>
+        <label htmlFor="title" className="block text-sm font-medium text-gray-700">Title<span className="text-red-500">*</span></label>
         <input
           id="title"
           name="title"
           type="text"
-          required
-          className="w-full border rounded p-2 focus:outline-none focus:ring"
           value={title}
           onChange={e => setTitle(e.target.value)}
+          required
+          className="block w-full mt-1 rounded border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-100"
           placeholder="Bookmark title"
         />
       </div>
+
       <div>
-        <label htmlFor="tag" className="block font-medium mb-1">
-          Tag
-        </label>
+        <label htmlFor="tag" className="block text-sm font-medium text-gray-700">Tag</label>
         <input
           id="tag"
           name="tag"
           type="text"
-          required
-          className="w-full border rounded p-2 focus:outline-none focus:ring"
           value={tag}
           onChange={e => setTag(e.target.value)}
+          className="block w-full mt-1 rounded border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-100"
           placeholder="e.g. productivity"
         />
       </div>
+
       <button
         type="submit"
-        className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 disabled:opacity-50"
-        disabled={submitting}
+        className="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-semibold rounded hover:bg-blue-700 focus:ring-2 focus:ring-blue-400 disabled:opacity-60"
+        disabled={loading}
       >
-        {submitting ? "Saving..." : "Save Bookmark"}
+        {loading ? "Saving..." : "Save Bookmark"}
       </button>
-      {status && <p className="text-green-600 font-medium mt-2" role="status">{status}</p>}
-      {error && <p className="text-red-600 font-medium mt-2" role="alert">{error}</p>}
+
+      {success && (
+        <p className="text-green-700 text-sm mt-2" role="status">{success}</p>
+      )}
+      {error && (
+        <p className="text-red-600 text-sm mt-2" role="alert">{error}</p>
+      )}
     </form>
   );
 }
