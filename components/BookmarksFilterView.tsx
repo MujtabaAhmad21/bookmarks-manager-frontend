@@ -61,7 +61,7 @@ function BookmarkList({ bookmarks }: { bookmarks: BookmarkRead[]; }) {
           <span className="inline-block mt-1 px-2 py-0.5 text-xs rounded bg-blue-50 text-blue-700">
             {(b.tag && b.tag.trim()) || "(untagged)"}
           </span>
-          <span className="text-xs text-gray-400 mt-0.5">Added {new Date(b.created_at).toLocaleDateString(undefined, { dateStyle: "medium", timeStyle: "short" })}</span>
+          <span className="text-xs text-gray-400 mt-0.5">Added {new Date(b.created_at).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}</span>
         </li>
       ))}
     </ul>
